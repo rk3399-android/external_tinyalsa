@@ -39,7 +39,7 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <limits.h>
-
+#include <cutils/log.h>
 #include <linux/ioctl.h>
 #define __force
 #define __bitwise
@@ -62,6 +62,10 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
+#define LOG_TAG "TINY-ALSA"
+
+#define ALOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
+#define ALOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
 /* refer to SNDRV_PCM_ACCESS_##index in sound/asound.h. */
 static const char * const access_lookup[] = {
         "MMAP_INTERLEAVED",
@@ -215,6 +219,22 @@ static unsigned int param_get_int(struct snd_pcm_hw_params *p, int n)
     }
     return 0;
 }
+
+static void param_set_flag(struct snd_pcm_hw_params *p, unsigned int flag)
+{
+    if (p != NULL) {
+        p->flags = flag;
+    }
+}
+
+static int param_get_flag(struct snd_pcm_hw_params *p)
+{
+    if (p != NULL) {
+        return p->flags;
+    }
+    return 0;
+}
+
 
 static void param_init(struct snd_pcm_hw_params *p)
 {
@@ -924,6 +944,7 @@ struct pcm *pcm_open(unsigned int card, unsigned int device,
                   config->channels);
     param_set_int(&params, SNDRV_PCM_HW_PARAM_PERIODS, config->period_count);
     param_set_int(&params, SNDRV_PCM_HW_PARAM_RATE, config->rate);
+    param_set_flag(&params, config->flag);
 
     if (flags & PCM_NOIRQ) {
         if (!(flags & PCM_MMAP)) {

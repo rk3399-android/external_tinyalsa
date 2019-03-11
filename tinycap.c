@@ -198,7 +198,7 @@ unsigned int capture_sample(FILE *file, unsigned int card, unsigned int device,
     struct pcm *pcm;
     char *buffer;
     unsigned int size;
-    unsigned int bytes_read = 0;
+    unsigned int bytes_read = 0, frames;
     struct timespec end;
     struct timespec now;
 
@@ -249,7 +249,8 @@ unsigned int capture_sample(FILE *file, unsigned int card, unsigned int device,
         }
     }
 
+    frames = pcm_bytes_to_frames(pcm, bytes_read);
     free(buffer);
     pcm_close(pcm);
-    return pcm_bytes_to_frames(pcm, bytes_read);
+    return frames;
 }
